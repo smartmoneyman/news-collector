@@ -14,25 +14,33 @@ DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
 print(f"✅ Webhook загружен: {bool(DISCORD_WEBHOOK_URL)}")
 
 # Функция получения новостей
+import json
+
 def get_yahoo_news(ticker):
-    url = f"https://finance.yahoo.com/quote/{ticker}/news"
-    headers = {"User-Agent": "Mozilla/5.0"}
+    url = f"https://query2.finance.yahoo.com/v1/finance/search?q={ticker}&newsCount=10"
+    headers = {
+        "User-Agent": "Mozilla/5.0",
+        "Accept": "application/json",
+    }
     
     response = requests.get(url, headers=headers)
-    soup = BeautifulSoup(response.text, "html.parser")
-    
+    if response.status_code != 200:
+        print(f"⚠️ Ошибка запроса: {response.status_code}")
+        return []
+
+    data = response.json()
     news_list = []
-    
-    for article in soup.find_all("li", class_="js-stream-content"):
-        title_tag = article.find("h3")
-        link_tag = article.find("a")
-        if title_tag and link_tag:
-            title = title_tag.text
-            link = "https://finance.yahoo.com" + link_tag["href"]
-            news_list.append({"title": title, "link": link})
+
+    if "news" in data:
+        for article in data["news"]:
+            title = article.get("title", "Без заголовка")
+            link = article.get("link", "")
+            if title and link:
+                news_list.append({"title": title, "link": link})
     
     print(f"🔍 Найдено {len(news_list)} новостей для {ticker}")
     return news_list
+
 
 # Функция анализа тональности
 def analyze_sentiment(news_list):
