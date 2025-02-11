@@ -1,0 +1,28 @@
+name: Run Stock News Bot
+
+on:
+  schedule:
+    - cron: "0 * * * *"  # Запуск раз в час (можно изменить)
+  
+  workflow_dispatch:  # Позволяет запускать вручную через GitHub Actions
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout репозиторий
+        uses: actions/checkout@v2
+
+      - name: Установка Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.9"
+
+      - name: Установка зависимостей
+        run: pip install yfinance nltk pandas requests beautifulsoup4
+
+      - name: Запуск скрипта
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}  # Webhook из GitHub Secrets
+        run: python script.py
