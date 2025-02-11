@@ -2,9 +2,9 @@ name: Run Stock News Bot
 
 on:
   schedule:
-    - cron: "0 * * * *"  # Запуск раз в час (можно изменить)
+    - cron: "0 * * * *"  # Запуск раз в час
   
-  workflow_dispatch:  # Позволяет запускать вручную через GitHub Actions
+  workflow_dispatch:  # Позволяет запуск вручную
 
 jobs:
   run-script:
@@ -20,9 +20,11 @@ jobs:
           python-version: "3.9"
 
       - name: Установка зависимостей
-        run: pip install yfinance nltk pandas requests beautifulsoup4
+        run: |
+          pip install yfinance nltk pandas requests beautifulsoup4
+          pip install googletrans==4.0.0-rc1  # ✅ Добавляем googletrans
 
       - name: Запуск скрипта
         env:
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}  # Webhook из GitHub Secrets
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: python script.py
