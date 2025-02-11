@@ -48,8 +48,18 @@ def get_yahoo_news(ticker):
 def analyze_sentiment(news_list):
     results = []
     for news in news_list:
-        sentiment = sia.polarity_scores(news["title"])
-        news["sentiment"] = sentiment["compound"]
+        sentiment_score = sia.polarity_scores(news["title"])["compound"]
+        
+        # Присваиваем текстовую оценку тональности
+        if sentiment_score > 0.3:
+            sentiment_text = "📈 Позитивная"
+        elif sentiment_score < -0.3:
+            sentiment_text = "📉 Негативная"
+        else:
+            sentiment_text = "⚖️ Нейтральная"
+
+        news["sentiment_score"] = sentiment_score
+        news["sentiment_text"] = sentiment_text
         results.append(news)
 
     return results
@@ -57,7 +67,12 @@ def analyze_sentiment(news_list):
 # 🔹 Функция отправки в Discord
 def send_to_discord(news, ticker):
     if DISCORD_WEBHOOK_URL:
-        message = f"📢 **[{ticker}] Новость**\n**{news['title']}**\n🔗 {news['link']}\n📊 Тональность: {news['sentiment']:.2f}"
+        message = (
+            f"📢 **[{ticker}] Новость**\n"
+            f"**{news['title']}**\n"
+            f"🔗 {news['link']}\n"
+            f"📊 Тональность: {news['sentiment_text']} ({news['sentiment_score']:.2f})"
+        )
         payload = {"content": message}
 
         response = requests.post(DISCORD_WEBHOOK_URL, json=payload)
@@ -82,7 +97,7 @@ for ticker in TICKERS:
     analyzed_news = analyze_sentiment(news)
 
     for news_item in analyzed_news:
-        if abs(news_item["sentiment"]) >= SENTIMENT_THRESHOLD:
+        if abs(news_item["sentiment_score"]) >= SENTIMENT_THRESHOLD:
             unique_id = f"{ticker}-{news_item['title']}"
             if unique_id not in sent_news:
                 send_to_discord(news_item, ticker)
