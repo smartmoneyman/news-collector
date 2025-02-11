@@ -5,17 +5,19 @@ from bs4 import BeautifulSoup
 import yfinance as yf
 import nltk
 from nltk.sentiment import SentimentIntensityAnalyzer
+from googletrans import Translator
 
-# Инициализация Sentiment Analyzer
+# Инициализация Sentiment Analyzer и Переводчика
 nltk.download('vader_lexicon')
 sia = SentimentIntensityAnalyzer()
+translator = Translator()
 
 # Получаем Webhook из переменных окружения
 DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
 print(f"✅ Webhook загружен: {bool(DISCORD_WEBHOOK_URL)}")
 
 # 🔹 Настройки
-TICKERS = ["AAPL", "TSLA", "MSFT"]  # Можно добавить другие акции
+TICKERS = ["PLTR", "AMD", "PYPL"]  # Можно добавить другие акции
 SENTIMENT_THRESHOLD = 0.3  # Минимальный порог тональности для отправки (0.3 - средний, 0.5 - сильный)
 
 # 🔹 Функция получения новостей с Yahoo Finance API
@@ -44,12 +46,12 @@ def get_yahoo_news(ticker):
     print(f"🔍 Найдено {len(news_list)} новостей для {ticker}")
     return news_list
 
-# 🔹 Фильтрация новостей по тональности
+# 🔹 Фильтрация новостей по тональности и перевод
 def analyze_sentiment(news_list):
     results = []
     for news in news_list:
         sentiment_score = sia.polarity_scores(news["title"])["compound"]
-        
+
         # Присваиваем текстовую оценку тональности
         if sentiment_score > 0.3:
             sentiment_text = "📈 Позитивная"
@@ -58,8 +60,16 @@ def analyze_sentiment(news_list):
         else:
             sentiment_text = "⚖️ Нейтральная"
 
+        # Перевод заголовка на русский
+        try:
+            translated_title = translator.translate(news["title"], src="en", dest="ru").text
+        except Exception as e:
+            print(f"⚠️ Ошибка перевода: {e}")
+            translated_title = news["title"]  # Оставляем оригинал, если перевод не сработал
+
         news["sentiment_score"] = sentiment_score
         news["sentiment_text"] = sentiment_text
+        news["translated_title"] = translated_title
         results.append(news)
 
     return results
@@ -69,7 +79,7 @@ def send_to_discord(news, ticker):
     if DISCORD_WEBHOOK_URL:
         message = (
             f"📢 **[{ticker}] Новость**\n"
-            f"**{news['title']}**\n"
+            f"**{news['translated_title']}**\n"
             f"🔗 {news['link']}\n"
             f"📊 Тональность: {news['sentiment_text']} ({news['sentiment_score']:.2f})"
         )
