@@ -2,7 +2,7 @@ name: Run Stock News Bot
 
 on:
   schedule:
-    - cron: "0 * * * *"  # Запуск раз в час
+    - cron: "0 9,21 * * *"  # Запуск в 9:00 и 21:00 UTC
   
   workflow_dispatch:  # Позволяет запуск вручную
 
