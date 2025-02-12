@@ -17,7 +17,7 @@ DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
 print(f"✅ Webhook загружен: {bool(DISCORD_WEBHOOK_URL)}")
 
 # 🔹 Настройки
-TICKERS = ["PLTR", "AMD", "PYPL"]  # Можно добавить другие акции
+TICKERS = ["PLTR", "AMD", "PYPL", "CSCO", "SHOP", "SMCI", "PINS", "UBER", "CMSA", "SNAP", "INTC", "NOK", "T"]  # Можно добавить другие акции
 SENTIMENT_THRESHOLD = 0.3  # Минимальный порог тональности для отправки (0.3 - средний, 0.5 - сильный)
 
 # 🔹 Функция получения новостей с Yahoo Finance API
