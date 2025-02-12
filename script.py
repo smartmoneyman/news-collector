@@ -16,9 +16,18 @@ translator = Translator()
 DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
 print(f"✅ Webhook загружен: {bool(DISCORD_WEBHOOK_URL)}")
 
-# 🔹 Настройки
-TICKERS = ["PLTR", "AMD", "PYPL", "CSCO", "SHOP", "SMCI", "PINS", "UBER", "CMSA", "SNAP", "INTC", "NOK", "T"]  # Можно добавить другие акции
-SENTIMENT_THRESHOLD = 0.3  # Минимальный порог тональности для отправки (0.3 - средний, 0.5 - сильный)
+# 🔹 Загружаем список тикеров из файла `tickers.txt`
+def load_tickers(filename="tickers.txt"):
+    try:
+        with open(filename, "r") as file:
+            tickers = [line.strip() for line in file.readlines() if line.strip()]
+            print(f"📌 Загружены тикеры: {', '.join(tickers)}")
+            return tickers
+    except FileNotFoundError:
+        print("⚠️ Файл `tickers.txt` не найден! Используем стандартный список.")
+        return ["AAPL", "TSLA", "MSFT"]  # Резервный список
+
+TICKERS = load_tickers()
 
 # 🔹 Функция получения новостей с Yahoo Finance API
 def get_yahoo_news(ticker):
@@ -107,7 +116,7 @@ for ticker in TICKERS:
     analyzed_news = analyze_sentiment(news)
 
     for news_item in analyzed_news:
-        if abs(news_item["sentiment_score"]) >= SENTIMENT_THRESHOLD:
+        if abs(news_item["sentiment_score"]) >= 0.3:
             unique_id = f"{ticker}-{news_item['title']}"
             if unique_id not in sent_news:
                 send_to_discord(news_item, ticker)
